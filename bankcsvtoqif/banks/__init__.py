@@ -31,6 +31,7 @@ class BankAccountConfig(object):
     """
 
     __metaclass__ = ABCMeta
+    encoding = "utf_8"
 
     transaction_type = TransactionType.CASH
 
