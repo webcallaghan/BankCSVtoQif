@@ -42,7 +42,10 @@ class Orico(BankAccountConfig):
         self.encoding = 'shift-jis'
 
     def get_date(self, line, all_lines):
-        return datetime.strptime(line[0], "%Y年%m月%d日")
+        date = line[0]
+        if not date:
+            date = all_lines[2][1]
+        return datetime.strptime(date, "%Y年%m月%d日")
 
     def get_description(self, line, all_lines):
         return "{}（{}）".format(line[1], line[3])
@@ -52,10 +55,23 @@ class Orico(BankAccountConfig):
         amount = amount.replace(",", "")
         return int(amount)
 
+    def find_amount(self, line):
+        indexes = [8, 11]
+        for index in indexes:
+            try:
+                return self.get_amount(line[index])
+            except ValueError:
+                pass
+        raise ValueError(
+            "Could not find a cash amount in any of these cells: {}".format(
+                ", ".join(str(index) for index in indexes)
+            )
+        )
+
     def get_debit(self, line, all_lines):
-        amount = self.get_amount(line[8])
+        amount = self.find_amount(line)
         return -min(amount, 0)
 
     def get_credit(self, line, all_lines):
-        amount = self.get_amount(line[8])
+        amount = self.find_amount(line)
         return max(amount, 0)

@@ -18,45 +18,43 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-import unittest
 from datetime import datetime
 
 from bankcsvtoqif.banks.orico import Orico
-from bankcsvtoqif.tests.banks import csvline_to_line
+from bankcsvtoqif.tests.banks import TestBankAccountConfig
+from bankcsvtoqif.transaction import Transaction
 
 
-class TestOrico(unittest.TestCase):
-
-    def setUp(self):
-        self.csv = r"""2021年3月1日,This is a debit テスト,null,家族,2021年3月,アド,,,"\-4,000",,,,-,-"""
-        self.csv2 = r'''2021年3月10日,This is a credit テスト,*,本人,2021年3月,アド,1,1,"\5,000",,,"\0","\5,000","\0"'''
-
-    def test_can_instantiate(self):
+class TestOrico(TestBankAccountConfig):
+    def testParse(self):
         account_config = Orico()
-        self.assertEqual(type(account_config), Orico)
-
-    def test_debit(self):
-        account_config = Orico()
-        line = csvline_to_line(self.csv, account_config)
-        date = datetime(2021, 3, 1)
-        description = 'This is a debit テスト（家族）'
-        debit = 4000
-        credit = 0
-        all_lines = (line, line)
-        self.assertEqual(account_config.get_date(line, all_lines), date)
-        self.assertEqual(account_config.get_description(line, all_lines), description)
-        self.assertEqual(account_config.get_debit(line, all_lines), debit)
-        self.assertEqual(account_config.get_credit(line, all_lines), credit)
-
-    def test_credit(self):
-        account_config = Orico()
-        line = csvline_to_line(self.csv2, account_config)
-        date = datetime(2021, 3, 10)
-        description = 'This is a credit テスト（本人）'
-        debit = 0
-        credit = 5000
-        all_lines = (line, line)
-        self.assertEqual(account_config.get_date(line, all_lines), date)
-        self.assertEqual(account_config.get_description(line, all_lines), description)
-        self.assertEqual(account_config.get_debit(line, all_lines), debit)
-        self.assertEqual(account_config.get_credit(line, all_lines), credit)
+        self.assert_csv_parsed_as(
+            "orico.csv",
+            account_config,
+            [
+                Transaction(
+                    date=datetime(2021, 3, 1),
+                    description="This is a debit テスト（家族）",
+                    debit=4000,
+                    credit=0,
+                    source_account=account_config.default_source_account,
+                    target_account=account_config.default_target_account,
+                ),
+                Transaction(
+                    date=datetime(2021, 3, 10),
+                    description="This is a credit テスト（本人）",
+                    debit=0,
+                    credit=5000,
+                    source_account=account_config.default_source_account,
+                    target_account=account_config.default_target_account,
+                ),
+                Transaction(
+                    date=datetime(2021, 3, 29),
+                    description="ご利用代金明細書発行手数料（本人）",
+                    debit=0,
+                    credit=110,
+                    source_account=account_config.default_source_account,
+                    target_account=account_config.default_target_account,
+                ),
+            ]
+        )
