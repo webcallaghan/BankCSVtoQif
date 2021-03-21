@@ -167,14 +167,15 @@ class TestTransactionFactory(unittest.TestCase):
 
     def test_create_transaction_factory(self):
         line = csvline_to_line(csv_line, self.account_config)
+        all_lines = [line, line]
         transaction_factory = TransactionFactory(self.account_config)
-        transaction = transaction_factory.create_from_line(line)
-        self.assertEqual(transaction.date, self.account_config.get_date(line))
-        self.assertEqual(transaction.description, self.account_config.get_description(line))
-        self.assertEqual(transaction.debit, self.account_config.get_debit(line))
-        self.assertEqual(transaction.credit, self.account_config.get_credit(line))
-        self.assertEqual(transaction.target_account, self.account_config.get_target_account(line))
-        self.assertEqual(transaction.transaction_type, self.account_config.get_transaction_type(line))
+        transaction = transaction_factory.create_from_csv_data(line, all_lines)
+        self.assertEqual(transaction.date, self.account_config.get_date(line, all_lines))
+        self.assertEqual(transaction.description, self.account_config.get_description(line, all_lines))
+        self.assertEqual(transaction.debit, self.account_config.get_debit(line, all_lines))
+        self.assertEqual(transaction.credit, self.account_config.get_credit(line, all_lines))
+        self.assertEqual(transaction.target_account, self.account_config.default_target_account)
+        self.assertEqual(transaction.transaction_type, self.account_config.get_transaction_type(line, all_lines))
 
     def test_read_from_file(self):
         fake_csv_file = self.write_fake_csv()

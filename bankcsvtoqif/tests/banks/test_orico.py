@@ -42,10 +42,11 @@ class TestOrico(unittest.TestCase):
         description = 'This is a debit テスト（家族）'
         debit = 4000
         credit = 0
-        self.assertEqual(account_config.get_date(line), date)
-        self.assertEqual(account_config.get_description(line), description)
-        self.assertEqual(account_config.get_debit(line), debit)
-        self.assertEqual(account_config.get_credit(line), credit)
+        all_lines = (line, line)
+        self.assertEqual(account_config.get_date(line, all_lines), date)
+        self.assertEqual(account_config.get_description(line, all_lines), description)
+        self.assertEqual(account_config.get_debit(line, all_lines), debit)
+        self.assertEqual(account_config.get_credit(line, all_lines), credit)
 
     def test_credit(self):
         account_config = Orico()
@@ -54,7 +55,8 @@ class TestOrico(unittest.TestCase):
         description = 'This is a credit テスト（本人）'
         debit = 0
         credit = 5000
-        self.assertEqual(account_config.get_date(line), date)
-        self.assertEqual(account_config.get_description(line), description)
-        self.assertEqual(account_config.get_debit(line), debit)
-        self.assertEqual(account_config.get_credit(line), credit)
+        all_lines = (line, line)
+        self.assertEqual(account_config.get_date(line, all_lines), date)
+        self.assertEqual(account_config.get_description(line, all_lines), description)
+        self.assertEqual(account_config.get_debit(line, all_lines), debit)
+        self.assertEqual(account_config.get_credit(line, all_lines), credit)

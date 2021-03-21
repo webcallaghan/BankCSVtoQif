@@ -18,10 +18,8 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-import collections
 import csv
 from enum import Enum, auto
-from itertools import islice
 
 
 class TransactionType(Enum):
@@ -29,14 +27,6 @@ class TransactionType(Enum):
     BANK = auto()
     CREDIT_CARD = auto()
     INVESTMENT = auto()
-
-
-def consume(iterator, n):
-    """Advance the iterator n-steps ahead. If n is none, consume entirely."""
-    if n is None:
-        collections.deque(iterator, maxlen=0)
-    else:
-        next(islice(iterator, n, n), None)
 
 
 class Transaction(object):
@@ -112,15 +102,15 @@ class TransactionFactory(object):
     def __init__(self, account_config):
         self.account_config = account_config
 
-    def create_from_line(self, line):
+    def create_from_csv_data(self, line, all_lines):
         return Transaction(
-            date=self.account_config.get_date(line),
-            description=self.account_config.get_description(line),
-            debit=self.account_config.get_debit(line),
-            credit=self.account_config.get_credit(line),
-            target_account=self.account_config.get_target_account(line),
-            source_account=self.account_config.get_source_account(line),
-            transaction_type=self.account_config.get_transaction_type(line),
+            date=self.account_config.get_date(line, all_lines),
+            description=self.account_config.get_description(line, all_lines),
+            debit=self.account_config.get_debit(line, all_lines),
+            credit=self.account_config.get_credit(line, all_lines),
+            target_account=self.account_config.get_target_account(line, all_lines),
+            source_account=self.account_config.get_source_account(line, all_lines),
+            transaction_type=self.account_config.get_transaction_type(line, all_lines),
         )
 
     def read_from_file(self, f, messenger):
@@ -128,15 +118,15 @@ class TransactionFactory(object):
             'bank_csv',
             self.account_config.get_csv_dialect()
         )
-        c = csv.reader(f, 'bank_csv')
-        consume(c, self.account_config.dropped_lines)  # ignore first lines
+        reader = csv.reader(f, 'bank_csv')
+        all_lines = tuple(tuple(line) for line in reader)
         transactions = []
-        for line in c:
+        for line in all_lines[self.account_config.dropped_lines:]:  # ignore first lines
             try:
-                transaction = self.create_from_line(line)
+                transaction = self.create_from_csv_data(line, all_lines)
                 transactions.append(transaction)
-                messenger.send_message("parsed: " + transaction.__str__())
+                messenger.send_message('parsed: {}'.format(transaction))
             except IndexError:
-                messenger.send_message('skipped: %s' % line)
+                messenger.send_message('skipped: {}'.format(line))
                 continue
         return transactions

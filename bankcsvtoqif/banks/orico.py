@@ -41,10 +41,10 @@ class Orico(BankAccountConfig):
         self.default_target_account = 'Imbalance-JPY'
         self.encoding = 'shift-jis'
 
-    def get_date(self, line):
+    def get_date(self, line, all_lines):
         return datetime.strptime(line[0], "%Y年%m月%d日")
 
-    def get_description(self, line):
+    def get_description(self, line, all_lines):
         return "{}（{}）".format(line[1], line[3])
 
     def get_amount(self, amount):
@@ -52,10 +52,10 @@ class Orico(BankAccountConfig):
         amount = amount.replace(",", "")
         return int(amount)
 
-    def get_debit(self, line):
+    def get_debit(self, line, all_lines):
         amount = self.get_amount(line[8])
         return -min(amount, 0)
 
-    def get_credit(self, line):
+    def get_credit(self, line, all_lines):
         amount = self.get_amount(line[8])
         return max(amount, 0)
